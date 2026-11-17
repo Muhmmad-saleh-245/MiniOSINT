@@ -1,0 +1,45 @@
+{% from "_results.html" import body, obs_list %}
+<header class="report-head">
+  <p class="eyebrow">Investigation report</p>
+  <h1>{{ ctx.case.title }}</h1>
+  <table class="kv">
+    <tr><th scope="row">Analyst</th><td>{{ ctx.case.analyst }}</td></tr>
+    <tr><th scope="row">Authorization / purpose</th><td>{{ ctx.case.authorization }}</td></tr>
+    <tr><th scope="row">Case created</th><td>{{ ctx.case.created }}</td></tr>
+    <tr><th scope="row">Report generated</th><td>{{ ctx.generated }}</td></tr>
+    <tr><th scope="row">Tool</th><td>{{ ctx.tool }}</td></tr>
+  </table>
+</header>
+
+<section>
+  <h2>Summary</h2>
+  <p>{{ ctx['items']|length }} lookup(s) on {{ ctx.targets|length }} target(s).
+     Observations: <strong>{{ ctx.counts.high }}</strong> high, <strong>{{ ctx.counts.warn }}</strong> warning, <strong>{{ ctx.counts.info }}</strong> note.</p>
+  {% if ctx.observations %}
+  <table class="grid">
+    <thead><tr><th>Level</th><th>Target</th><th>Observation</th></tr></thead>
+    <tbody>
+    {% for o in ctx.observations %}
+      <tr><td><span class="badge {{ o.level }}">{{ ctx.level_label[o.level] }}</span></td><td>{{ o.target }}</td><td>{{ o.text }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No observations yet.</p>{% endif %}
+</section>
+
+{% if ctx.case.notes %}
+<section><h2>Analyst notes</h2><p class="prewrap">{{ ctx.case.notes }}</p></section>
+{% endif %}
+
+{% for it in ctx['items'] %}
+<section class="result">
+  <h2>{{ it.label }}: {{ it.target }}</h2>
+  <p class="muted small">Retrieved {{ it.retrieved }}</p>
+  {{ body(it) }}
+</section>
+{% endfor %}
+
+<section>
+  <h2>Limitations</h2>
+  <p>{{ ctx.disclaimer }}</p>
+</section>

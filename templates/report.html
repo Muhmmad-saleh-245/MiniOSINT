@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Report: {{ ctx.case.title }}{% endblock %}
+{% block content %}
+<p class="crumb noprint"><a href="{{ url_for('case_page', case_id=ctx.case.id) }}">← Back to investigation</a></p>
+<div class="actions noprint">
+  <a class="btn" href="{{ url_for('report_html', case_id=ctx.case.id) }}">Download HTML</a>
+  <a class="btn" href="{{ url_for('report_md', case_id=ctx.case.id) }}">Download Markdown</a>
+  <button class="btn" type="button" data-print>Print / Save as PDF</button>
+</div>
+<article class="card report">
+  {% include "_report_body.html" %}
+</article>
+{% endblock %}

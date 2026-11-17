@@ -1,0 +1,101 @@
+{% macro obs_list(observations) %}
+  {% if observations %}
+  <ul class="obs">
+    {% for o in observations %}
+    <li><span class="badge {{ o.level }}">{{ {'high': 'High', 'warn': 'Warning', 'info': 'Note'}.get(o.level, o.level) }}</span> {{ o.text }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+{% endmacro %}
+
+{% macro kv(rows) %}
+  <table class="kv">
+    {% for k, v in rows if v is defined and v is not none and v != '' and v != [] %}
+    <tr><th scope="row">{{ k }}</th><td>{{ v }}</td></tr>
+    {% endfor %}
+  </table>
+{% endmacro %}
+
+{% macro problems(errors) %}
+  {% if errors %}
+  <p class="problems"><strong>Problems during lookup:</strong>
+    {% if errors is mapping %}{% for k, v in errors.items() %}{{ k }}: {{ v }}{{ '; ' if not loop.last }}{% endfor %}
+    {% else %}{{ errors | join('; ') }}{% endif %}
+  </p>
+  {% endif %}
+{% endmacro %}
+
+{% macro body(r) %}
+  {% set d = r.data %}
+  {% if r.kind == 'whois' %}
+    {% if d.found == false %}
+      <p class="muted">No registration record found.</p>
+    {% else %}
+      {{ kv([('Source', d.source), ('Registrar', d.registrar), ('Created', d.created), ('Expires', d.expires),
+             ('Last updated', d.updated), ('Domain age (days)', d.age_days), ('Days until expiry', d.days_to_expiry),
+             ('Name servers', d.nameservers | join(', ')), ('Status', d.status | join(', ')),
+             ('Organization', d.org), ('Country', d.country), ('DNSSEC', d.dnssec),
+             ('Registrant hidden by privacy', 'yes' if d.privacy_protected else ('no' if d.privacy_protected == false else none))]) }}
+    {% endif %}
+  {% elif r.kind == 'dns' %}
+    {% if d.records %}
+    <table class="grid">
+      <thead><tr><th>Type</th><th>Value</th></tr></thead>
+      <tbody>
+      {% for t, vals in d.records.items() %}{% for v in vals %}
+        <tr><td><code>{{ t }}</code></td><td class="wrap">{{ v }}</td></tr>
+      {% endfor %}{% endfor %}
+      </tbody>
+    </table>
+    {% elif not d.nxdomain %}<p class="muted">No records returned.</p>{% endif %}
+    {% if d.email_security %}
+      {% set es = d.email_security %}
+      <h4>Email security</h4>
+      {{ kv([('SPF', es.spf.record or 'missing'), ('SPF policy', es.spf.policy),
+             ('DMARC', es.dmarc.record or 'missing'),
+             ('DKIM selectors found', (es.dkim_selectors_found | join(', ')) or ('none of the common ones' if es.dkim_checked else 'not checked'))]) }}
+    {% endif %}
+    {% if d.resolver %}<p class="muted small">Resolver: {{ d.resolver }}</p>{% endif %}
+  {% elif r.kind == 'ip' %}
+    {% set reg = d.registry or {} %}{% set geo = d.geolocation or {} %}
+    {{ kv([('Reverse DNS', d.reverse_dns or 'none'), ('Network', reg.network_name), ('Range', reg.range),
+           ('Registry organization', reg.organization), ('Registry country', reg.country), ('Type', reg.type),
+           ('Country', geo.country), ('Region', geo.region), ('City (approximate)', geo.city),
+           ('ASN', geo.asn), ('ISP', geo.isp), ('Organization', geo.org), ('Timezone', geo.timezone)]) }}
+  {% elif r.kind == 'username' %}
+    <p class="muted small">Found {{ d.counts.found }} · Not found {{ d.counts.not_found }} · Unsure {{ d.counts.unsure }}</p>
+    <table class="grid">
+      <thead><tr><th>Platform</th><th>Result</th><th>Detail</th></tr></thead>
+      <tbody>
+      {% for x in d.results %}
+        <tr>
+          <td>{% if x.status == 'found' %}<a href="{{ x.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ x.platform }}</a>{% else %}{{ x.platform }}{% endif %}</td>
+          <td><span class="badge st-{{ x.status }}">{{ x.status | replace('_', ' ') }}</span></td>
+          <td class="muted">{{ x.detail }}{% if x.reliability == 'low' %} · low-reliability site{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+  {{ obs_list(d.observations) }}
+  {{ problems(d.errors) }}
+{% endmacro %}
+
+{% macro result_card(r, case_id, deletable, token) %}
+<article class="result">
+  <header class="row between">
+    <div>
+      <span class="kind">{{ KINDS[r.kind][0] if r.kind in KINDS else r.kind }}</span>
+      <strong class="target">{{ r.target }}</strong>
+      <span class="muted small">retrieved {{ r.data.retrieved_at or r.created }}</span>
+    </div>
+    {% if deletable %}
+    <form method="post" action="{{ url_for('delete_result', case_id=case_id, result_id=r.id) }}" data-confirm="Remove this result?">
+      <input type="hidden" name="csrf" value="{{ token }}">
+      <button class="btn small" type="submit">Remove</button>
+    </form>
+    {% endif %}
+  </header>
+  {{ body(r) }}
+</article>
+{% endmacro %}

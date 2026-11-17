@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Investigations</h1>
+  <p class="muted">Each investigation is a folder for one authorized job. Add lookups to it, then export a report.</p>
+</section>
+
+<div class="grid2">
+  <section class="card">
+    <h2>New investigation</h2>
+    <form method="post" action="{{ url_for('new_case') }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <label>Title
+        <input name="title" maxlength="120" required value="{{ form.title if form else '' }}" placeholder="e.g. Acme Ltd domain review">
+      </label>
+      <label>Analyst name
+        <input name="analyst" maxlength="80" required value="{{ form.analyst if form else '' }}" placeholder="Your name">
+      </label>
+      <label>Authorization / purpose
+        <textarea name="authorization" rows="2" maxlength="500" required placeholder="e.g. My own domain; or written permission from Acme Ltd (ref SOW-12); or practice lab">{{ form.authorization if form else '' }}</textarea>
+      </label>
+      <label>Notes (optional)
+        <textarea name="notes" rows="2" maxlength="2000">{{ form.notes if form else '' }}</textarea>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="confirm" value="yes" required>
+        <span>I confirm the targets are mine or I have permission, and I will only collect <strong>public</strong> information.</span>
+      </label>
+      <button class="btn primary" type="submit">Create investigation</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Your investigations</h2>
+    {% if cases %}
+    <ul class="caselist">
+      {% for c in cases %}
+      <li>
+        <a href="{{ url_for('case_page', case_id=c.id) }}"><strong>{{ c.title }}</strong></a>
+        <span class="muted">{{ c.analyst }} · {{ c.created }} · {{ c.n_results }} result{{ '' if c.n_results == 1 else 's' }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">Nothing yet. Create your first investigation on the left.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card">
+  <h2>What this tool does (and does not do)</h2>
+  <ul class="plain">
+    <li><strong>Does:</strong> domain registration (WHOIS / RDAP), DNS records and email-security checks, public IP information, and username existence on public platforms, then writes a report.</li>
+    <li><strong>Does not:</strong> scan ports, test vulnerabilities, guess subdomains, read private data, or collect profile content about people.</li>
+  </ul>
+</section>
+{% endblock %}

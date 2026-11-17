@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Dashboard{% endblock %} · Mini OSINT</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="{{ url_for('index') }}"><span class="logo" aria-hidden="true"></span>Mini OSINT Toolkit</a>
+  <span class="pill">local · passive · authorized targets only</span>
+</header>
+<main>
+  {% for cat, msg in get_flashed_messages(with_categories=true) %}
+  <div class="flash {{ cat }}" role="status">{{ msg }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+<footer>Public information only. Use on systems and people you are authorized to investigate. Results may be incomplete: verify before acting.</footer>
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

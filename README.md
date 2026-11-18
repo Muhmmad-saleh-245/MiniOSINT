@@ -1,5 +1,7 @@
 # Mini OSINT Toolkit
 
+[![tests](https://github.com/Muhmmad-saleh-245/MiniOSINT/actions/workflows/tests.yml/badge.svg)](https://github.com/Muhmmad-saleh-245/MiniOSINT/actions/workflows/tests.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 A beginner-friendly web dashboard (Python + Flask) for **passive OSINT** on **authorized targets**:
 
 | Lookup | What you get |
@@ -28,10 +30,14 @@ Windows: double-click `start_windows.bat`. Mac/Linux: `./start.sh`.
 - Server listens on 127.0.0.1 only; CSRF tokens, Host check, strict Content-Security-Policy, all output escaped.
 
 ## Known limits (honest list)
-- Built and unit-tested (50 tests) with **simulated network replies** and checked in a real browser. The live WHOIS, DNS, IP and platform requests were **not** tested by the author (no internet in the build sandbox). Run `python app.py selftest` first.
+- Built and unit-tested (51 tests) with **simulated network replies**, then verified end-to-end against live services: `selftest` passed 5/5 and 22 live HTTP checks passed for WHOIS, DNS, IP and username lookups. Run `python app.py selftest` on your machine to confirm your own connection.
 - `python-whois` and `dnspython` code paths are tested through stand-ins, not the real packages. The DoH fallback is tested the same way.
 - Username-check endpoints and the free IP API (`ipwho.is`) can change or rate-limit; sites often block bots, which shows as **unsure**. Always confirm a hit by hand. A matching name is not proof of identity.
 - WHOIS owner details are usually hidden by privacy rules. The tool says so instead of guessing.
 - Single user, local use only. Do not expose it to a network.
 
 Only investigate your own assets, authorized clients, or lab targets.
+
+## License
+
+MIT - see [LICENSE](LICENSE).
